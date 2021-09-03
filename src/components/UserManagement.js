@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-
+import { useAuth0 } from "@auth0/auth0-react";
 
 import Toolbar from "./Toolbar";
 import TableHeader from "./TableHeader";
@@ -7,18 +7,35 @@ import TableBody from "./TableBody";
 import routes from "../routes/routes";
 
 const UserManagement = () => {
+  const { getAccessTokenSilently } = useAuth0();
 
   const [users, setUsers] = useState([{}]);
+  const [accessToken, setAccessToken] = useState("");
   const loadingRef = useRef(true);
+
+  const getAccessToken = async () => {
+    const token = await getAccessTokenSilently({
+      audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+      scope: process.env.REACT_APP_AUTH0_SCOPE,
+    });
+    setAccessToken(token);
+  };
 
   useEffect(() => {
     if (loadingRef.current) {
-      const getUsers = async () => {
-        const response = await fetch(`${routes.SERVER}api/users`);
-        const data = await response.json();
-        setUsers(data);
-      };
-      getUsers();
+      getAccessToken();
+      if (accessToken.length > 1) {
+        const getUsers = async () => {
+          const response = await fetch(`${routes.SERVER}api/users`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          const data = await response.json();
+          setUsers(data);
+        };
+        getUsers();
+      }
     }
   });
 
@@ -29,7 +46,6 @@ const UserManagement = () => {
       ? checkboxes.forEach((checkbox) => (checkbox.checked = true))
       : checkboxes.forEach((checkbox) => (checkbox.checked = false));
   };
-
   const getIds = () => {
     const selectedUsers = [];
     const checkboxes = document.getElementsByName("foo");
@@ -38,22 +54,13 @@ const UserManagement = () => {
     );
     return selectedUsers;
   };
-
-  //handle the block button
-  const handleBlock = () => {
+  const handleBlock = (isBlock) => {
     const users = getIds();
-    statusChanging(users, true);
+    statusChanging(users, isBlock);
   };
-
-  //handle the unblock button
-  const handleUnBlock = () => {
-    const users = getIds();
-    statusChanging(users, false);
-  };
-
   const handleDelete = () => {
     const users = getIds();
-    deleteSelectedUsers(users);
+    deleteUsers(users);
   };
 
   const statusChanging = async (selectedUsers, blockedStatus = false) => {
@@ -62,22 +69,22 @@ const UserManagement = () => {
       body: JSON.stringify({ selectedUsers, blockedStatus }),
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
     });
-
     const data = await response.json();
-
     if (!response.ok) {
       throw new Error(data.message || "Something went wrong!");
     }
   };
 
-  const deleteSelectedUsers = async (selectedUsers) => {
+  const deleteUsers = async (selectedUsers) => {
     const response = await fetch(`${routes.SERVER}api/users`, {
       method: "DELETE",
       body: JSON.stringify({ selectedUsers }),
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     const data = await response.json();
@@ -85,7 +92,7 @@ const UserManagement = () => {
       throw new Error(data.message || "Something went wrong!");
     }
   };
-  // console.log(users);
+
   return (
     <>
       <div className="container">
@@ -96,7 +103,6 @@ const UserManagement = () => {
               <div className="d-flex align-items-center">
                 <Toolbar
                   handleBlock={handleBlock}
-                  handleUnBlock={handleUnBlock}
                   handleDelete={handleDelete}
                 />
               </div>

@@ -37,7 +37,9 @@ const TableBody = ({ users }) => {
             );
           })}
       </tbody>
+      {/* logout if the current logged user is blocked  */}
       {users &&
+        /* eslint-disable-next-line */
         users.find((u) => {
           u.user_id === user.sub &&
             u.blocked === true &&
