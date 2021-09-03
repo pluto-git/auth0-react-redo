@@ -1,6 +1,7 @@
-
+import { useAuth0 } from "@auth0/auth0-react";
 
 const TableBody = ({ users }) => {
+  const { logout, user } = useAuth0();
 
   return (
     <>
@@ -36,13 +37,14 @@ const TableBody = ({ users }) => {
             );
           })}
       </tbody>
+      {users &&
+        users.find((u) => {
+          u.user_id === user.sub &&
+            u.blocked === true &&
+            logout({ returnTo: window.location.origin });
+        })}
     </>
   );
 };
-// <th scope="col">Id</th>
-// <th scope="col">Name</th>
-// <th scope="col">Email</th>
-// <th scope="col">Registered</th>
-// <th scope="col">Last login</th>
-// <th scope="col">Status</th>
+
 export default TableBody;
