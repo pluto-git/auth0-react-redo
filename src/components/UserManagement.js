@@ -11,7 +11,7 @@ const UserManagement = () => {
   useEffect(() => {
     if (loadingRef.current) {
       const getUsers = async () => {
-        const response = await fetch(`${routes.LOCALHOST}api/users`);
+        const response = await fetch(`${routes.SERVER}api/users`);
         const data = await response.json();
         setUsers(data);
       };
@@ -54,7 +54,7 @@ const UserManagement = () => {
   };
 
   const statusChanging = async (selectedUsers, blockedStatus = false) => {
-    const response = await fetch(`${routes.LOCALHOST}api/users`, {
+    const response = await fetch(`${routes.SERVER}api/users`, {
       method: "PATCH",
       body: JSON.stringify({ selectedUsers, blockedStatus }),
       headers: {
@@ -70,7 +70,7 @@ const UserManagement = () => {
   };
 
   const deleteSelectedUsers = async (selectedUsers) => {
-    const response = await fetch(`${routes.LOCALHOST}api/users`, {
+    const response = await fetch(`${routes.SERVER}api/users`, {
       method: "DELETE",
       body: JSON.stringify({ selectedUsers }),
       headers: {
